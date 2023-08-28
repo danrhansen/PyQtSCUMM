@@ -1,6 +1,3 @@
 # PyQtSCUMM
-Experimenting with PyQt to build a point and click adventure game interface based on the legendary SCUMM engine.
-
-Learning References:
-https://www.pythonguis.com/pyqt6-tutorial/
-Fair amount of sketchy coding advice from ChatGPT  ...may experiment with GITHub Copilot later
+This is a quick and dirty prototype of a 2D adventure game engine developed using PyQt6 in Python. 
+I completed an online tutorial below and thought of doing this because of some similar game development I’ve done as a hobby. I am a big fan of point-and-click adventure games most people remember from the late 80s and 90s. I experimented with MVC vs Model View architecture thinking I might like some more flexibility with different UI designs. There is a lot to do yet  to make it a complete game prototype, but I had fun with it thus far. I also took a good amount of help from Chat GPT to shore up my understanding of Python.
