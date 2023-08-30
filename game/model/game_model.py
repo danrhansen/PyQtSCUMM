@@ -8,7 +8,7 @@ class GameModel(QObject):
 
     def __init__(self):
         super().__init__()
-        self._active_verb = ""
+        self._active_verb = "Walk to"
         self._active_mouseover = ""
         self._inventory_list = []
         self._got_bucket = False
@@ -39,7 +39,7 @@ class GameModel(QObject):
         self.info_updated.emit(info)
 
     def reset_info(self):
-        self._active_verb = ""
+        self._active_verb = "Walk to"
         self._active_mouseover = ""
         self.update_info()
 

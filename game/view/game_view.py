@@ -1,18 +1,16 @@
-import os
-from PyQt6.QtCore import pyqtProperty, pyqtSignal, QSize, Qt, QPointF
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QScrollArea, QLabel, QPushButton, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsTextItem
-from PyQt6.QtGui import QPixmap, QIcon, QColor, QCursor, QFont
+from PyQt6.QtCore import pyqtProperty, pyqtSignal, Qt, QPointF
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QGraphicsView, QGraphicsPixmapItem
+from PyQt6.QtGui import QPixmap, QCursor 
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtCore import QUrl
 
-from .game_view_helpers import InventoryLabel, Hotspot, Prop
+from .game_view_helpers import GameScene, SayTextItem, InfoLabel, StyledButton, InventoryScrollArea, Hotspot, Prop
+from .game_view_utils import get_file_path
 
-### Provides the main view component for the UI ###
 class GameView(QMainWindow):  
 
     # Custom signals to streamline controller mappings
-    verb_button_clicked = pyqtSignal(str) 
-    inventory_label_clicked = pyqtSignal(str)
+    verb_button_clicked = pyqtSignal(str)
     prop_clicked = pyqtSignal(str)
     prop_entered = pyqtSignal(str) 
     prop_left = pyqtSignal(str) 
@@ -26,14 +24,14 @@ class GameView(QMainWindow):
 
     def init_view(self):
         # Initialize the main UI elements and layouts
-        self.setWindowTitle("PyQtSCUMM - My Crappy Adventure Game Interface")
-        self.setFixedSize(QSize(680,440))
+        self.setWindowTitle("PyQtSCUMM: The Secret of Monkey Island")
+        self.setStyleSheet("background-color: black;")
 
         # Create media player for music
-        self.player = QMediaPlayer()
-        self.audio_output = QAudioOutput()
-        self.player.setAudioOutput(self.audio_output)
-        self.audio_output.setVolume(50)
+        self._player = QMediaPlayer()
+        self._audio_output = QAudioOutput()
+        self._player.setAudioOutput(self._audio_output)
+        self._audio_output.setVolume(50)
 
         # Setup screen layout
         self.setup_scene()
@@ -44,8 +42,7 @@ class GameView(QMainWindow):
         widget = QWidget()
         widget.setLayout(screen_layout)
         self.setCentralWidget(widget)
-        self.show()
-
+       
         # TODO: should be part of the scene load
         self.play_audio("scumm_bar.mp3")
 
@@ -53,82 +50,75 @@ class GameView(QMainWindow):
     # Update UI components based on game tick
     def update_view(self):
         
-        # Set cursor to crosshair if over the view. Probably could have been done with hover event but proves game tick is working...
-        # Also some special handling for Walk To
+        # Set cursor to crosshair if over the view. 
+        # TODO: Probably could have been done with hover event but proves game tick is working...
+        # TODO: Event trigger to controller to update active verb. Other changes needed to support Walk.
         if self.is_cursor_over_view():
             self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
-            # TODO
-            #if(self.info_label.text() == ""):
-                #self.info_label.setText("Walk to")
+    
         else:
             self.unsetCursor()
-            # TODO
-            #if(self.info_label.text() == "Walk to"):
-                #self.info_label.setText("")
-
 
     # Setup the scene
     # TODO: load and refresh from game state
     def setup_scene(self):
 
-        self.scene = QGraphicsScene()
-        self.scene.setBackgroundBrush(QColor("black"))
-        self.view = QGraphicsView(self.scene)
+        self._scene = GameScene()
 
         # Load example background image
-        background_image = QPixmap(self.get_file_path("resources", "scenes", "scummbar_ega.png"))
+        background_image = QPixmap(get_file_path("resources", "scenes", "scummbar_ega.png"))
         background_item = QGraphicsPixmapItem(background_image)
-        self.scene.addItem(background_item)
+        self._scene.addItem(background_item)
 
-        # TODO: Replace this basic say text solution  - not working
-        self.say_text = QGraphicsTextItem()
-        self.say_text.setPos(QPointF(40,100))
-        self.say_text.setDefaultTextColor(QColor("white")) 
-        self.say_text.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        self.scene.addItem(self.say_text)
+        # TODO: Replace this basic say text solution
+        self._say_text = SayTextItem()
+        self._say_text.setPos(QPointF(20,50))
+        self._scene.addItem(self._say_text)
 
         # Create bucket prop
-        bucket_image = QPixmap(self.get_file_path("resources", "inventory", "bucket.png"))
-        self.bucket_prop = Prop("bucket", bucket_image)
-        self.bucket_prop.setPos(225, 250)
-        self.bucket_prop.clicked.connect(self.handle_prop_click)
-        self.bucket_prop.entered.connect(self.handle_prop_enter)
-        self.bucket_prop.left.connect(self.handle_prop_leave)
-        self.scene.addItem(self.bucket_prop)
+        bucket_image = QPixmap(get_file_path("resources", "inventory", "bucket.png"))
+        self._bucket_prop = Prop("bucket", bucket_image)
+        self._bucket_prop.setPos(110, 125)
+        self._bucket_prop.clicked.connect(self.handle_prop_click)
+        self._bucket_prop.entered.connect(self.handle_prop_enter)
+        self._bucket_prop.left.connect(self.handle_prop_leave)
+        self._scene.addItem(self._bucket_prop)
 
         # Create pirate1 hotspot
-        self.pirate1_hotspot = Hotspot("Pirate", 160, 160, 80, 80)
-        self.pirate1_hotspot.clicked.connect(self.handle_hotspot_click)
-        self.pirate1_hotspot.entered.connect(self.handle_hotspot_enter)
-        self.pirate1_hotspot.left.connect(self.handle_hotspot_leave)
-        self.scene.addItem(self.pirate1_hotspot)
+        self._pirate1_hotspot = Hotspot("Pirate", 80, 80, 40, 40)
+        self._pirate1_hotspot.clicked.connect(self.handle_hotspot_click)
+        self._pirate1_hotspot.entered.connect(self.handle_hotspot_enter)
+        self._pirate1_hotspot.left.connect(self.handle_hotspot_leave)
+        self._scene.addItem(self._pirate1_hotspot)
+
+        # Place in view
+        self._view = QGraphicsView(self._scene)
+
+        # Remove scroll bars
+        self._view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._view.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._view.setContentsMargins(0,0,0,0)
 
     # Setup standalone widgets. Excludes verbs and inventory which are handled in setup_layout. 
     def setup_widgets(self):
 
         # Info
-        self.info_label = QLabel()
-        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.info_label.setStyleSheet("background-color: black; color: blue; font-size: 16px;")
-        self.info_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-
+        self._info_label = InfoLabel()
+        
         # Toolbar
-        self.options_button = QPushButton("Options")
-        self.options_button.setIcon(QIcon(self.get_file_path("resources", "gui", "options_button.png")))
-        self.options_button.setEnabled(False)
-        self.save_button = QPushButton("Save")
-        self.save_button.setIcon(QIcon(self.get_file_path("resources", "gui", "save_button.png")))
-        self.save_button.setEnabled(False)
-        self.quit_button = QPushButton("Quit")
-        self.quit_button.setIcon(QIcon(self.get_file_path("resources", "gui", "quit_button.png")))
+        self._options_button = StyledButton("Options")
+        self._options_button.setEnabled(False)
+        self._save_button = StyledButton("Save")
+        self._save_button.setEnabled(False)
+        self._quit_button = StyledButton("Quit")
 
         # Inventory Scroll
-        self.inv_scrollup_button = QPushButton('Up')
-        self.inv_scrollup_button.setIcon(QIcon(self.get_file_path("resources", "gui", "inv_scrollup_button.png")))
-        self.inv_scrollup_button.setDisabled(True)
-        self.inv_scrolldwn_button = QPushButton('Down')
-        self.inv_scrolldwn_button.setIcon(QIcon(self.get_file_path("resources", "gui", "inv_scrolldwn_button.png")))
-        self.inv_scrolldwn_button.setDisabled(True)
+        self._inv_scrollup_button = StyledButton('Up')
+        self._inv_scrollup_button.setDisabled(True)
+        self._inv_scrolldwn_button = StyledButton('Down')
+ 
+        self._inv_scrolldwn_button.setDisabled(True)
 
     # Setup screen layout and return for central widget. Includes verbs and inventory setup.
     def setup_layout(self):
@@ -140,7 +130,7 @@ class GameView(QMainWindow):
         verb_layout = QGridLayout()
         row, col = 0, 0
         for verb in verbs:
-            verb_button = QPushButton(verb)
+            verb_button = StyledButton(verb)
             verb_button.clicked.connect(self.handle_verb_button_click) # signal handled in view to streamline with controller
             verb_layout.addWidget(verb_button, row, col)
             col += 1
@@ -150,43 +140,43 @@ class GameView(QMainWindow):
           
         # Place toolbar buttons vertically
         toolbar_layout = QVBoxLayout()
-        toolbar_layout.addWidget(self.options_button)
-        toolbar_layout.addWidget(self.save_button)
-        toolbar_layout.addWidget(self.quit_button)
+        toolbar_layout.addWidget(self._options_button)
+        toolbar_layout.addWidget(self._save_button)
+        toolbar_layout.addWidget(self._quit_button)
 
         # Same with inventory scrollers
         inv_scroll_layout = QVBoxLayout()
-        inv_scroll_layout.addWidget(self.inv_scrollup_button)
-        inv_scroll_layout.addWidget(self.inv_scrolldwn_button)
-
-        # TODO: Scrollable inventory within 4x2 grid
-        self.inventory_layout = QGridLayout()
+        inv_scroll_layout.addWidget(self._inv_scrollup_button)
+        inv_scroll_layout.addWidget(self._inv_scrolldwn_button)
 
         # Create a scroll area for the inventory
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)  # Allow the content to be resized
-        self.scroll_area.setFixedSize(160, 90)
-        self.scroll_content = QWidget()
-        self.scroll_content.setLayout(self.inventory_layout)
-        self.scroll_area.setWidget(self.scroll_content)
+        self._inv_scroll_area = InventoryScrollArea()
        
         # Place gui layouts together horizontally
         gui_layout = QHBoxLayout()
         gui_layout.addLayout(verb_layout)
         gui_layout.addLayout(toolbar_layout)
         gui_layout.addLayout(inv_scroll_layout)
-        gui_layout.addWidget(self.scroll_area)
+        gui_layout.addWidget(self._inv_scroll_area)
 
         # Place view (scene), info label, and guid layout vertically
         screen_layout = QVBoxLayout()
-        screen_layout.addWidget(self.view)
-        screen_layout.addWidget(self.info_label)
+        screen_layout.addWidget(self._view)
+        screen_layout.addWidget(self._info_label)
         screen_layout.addLayout(gui_layout)
        
         return screen_layout
 
+    @pyqtProperty(str)
+    def quit_button(self):
+        return self._quit_button
+
+    @pyqtProperty(str)
+    def inv_scroll_area(self):
+        return self._inv_scroll_area
+
     def is_cursor_over_view(self):
-        view_rect = self.view.geometry()
+        view_rect = self._view.geometry()
         cursor_pos = self.mapFromGlobal(QCursor.pos())
 
         return view_rect.contains(cursor_pos)
@@ -194,28 +184,14 @@ class GameView(QMainWindow):
     # Functions to handle view changes based on events passed from controller
 
     def display_info(self, info):
-        self.info_label.setText(info)
+        self._info_label.setText(info)
 
-    def display_inventory(self, inventory_list): # TODO not working
-        
-        # Clear the existing items from the layout
-        #while self.inventory_layout.count() > 0:
-        #    item = self.inventory_layout.itemAt(0)
-        #    self.inventory_layout.removeItem(item)
-        #    item.widget().deleteLater()
-
-        row, col = 0, 0
-        for item in inventory_list:
-            inventory_label = InventoryLabel(item, self.get_file_path("resources", "inventory", f"{item}.png"))
-            inventory_label.clicked.connect(self.handle_inventory_label_click)
-            self.inventory_layout.addWidget(inventory_label, row, col)
-            col += 1
-            if col > 3:
-                col = 0 
-                row += 1
+    def display_inventory(self, inventory_list):
+        self._inv_scroll_area.display_inventory(inventory_list)
+                                             
 
     def display_character_say(self, text):
-        self.say_text.setPlainText(text)
+        self._say_text.setPlainText(text)
 
     # Functions to handle user interactions and pass them to the controller
 
@@ -229,10 +205,11 @@ class GameView(QMainWindow):
         prop_name = sender.name
         self.prop_clicked.emit(prop_name)
 
-        # TODO: Not where or how I  want to handle, but for now
+        # TODO: Not where or how I  want to handle, but for now. Bug fix needed to only remove bucket if matching verb.
+        # likely have to signal back grame model to remove it.
       
         if prop_name == "bucket":
-            self.scene.removeItem(sender)
+            self._scene.removeItem(sender)
             sender.deleteLater()
 
     def handle_prop_enter(self):
@@ -260,38 +237,18 @@ class GameView(QMainWindow):
         hotspot_name = sender.name
         self.hotspot_left.emit(hotspot_name)
 
-    def handle_inventory_label_click(self):
-        sender = self.sender()
-        inventory_name = sender.text()
-        self.inventory_label_clicked.emit(inventory_name)
-
     
     # Audio functions
+    # Todo: Custom audio class to to remove setup here
 
     def play_audio(self, file_name):
 
-        file_path = self.get_file_path("resources", "audio", file_name)
         # Load audio file
+        file_path = get_file_path("resources", "audio", file_name)
         audio_file = QUrl.fromLocalFile(file_path)
 
-        self.player.setSource(audio_file)
-        self.player.play()
+        self._player.setSource(audio_file)
+        self._player.play()
 
     def pause_audio(self):
-        self.player.pause()
-
-
-    # Misc
-
-    def get_file_path(self, *path_segments):
-        root_directory = os.path.dirname(os.path.abspath(__file__))
-        root_directory = os.path.abspath(os.path.join(root_directory, "..", ".."))  # Move two levels up
-        image_path = os.path.join(root_directory, *path_segments)
-        return image_path
-
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        self._player.pause()

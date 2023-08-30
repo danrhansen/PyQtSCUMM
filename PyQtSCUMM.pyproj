@@ -38,6 +38,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="game\view\game_view.py" />
+    <Compile Include="game\view\game_view_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="game\view\__init__.py">
       <SubType>Code</SubType>
     </Compile>

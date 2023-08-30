@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QTimer
 
 ### Provides the primary controller that interacts with the GameModel and GameView ###
 class GameController(QObject):
@@ -23,7 +23,7 @@ class GameController(QObject):
      
         self._game_view.verb_button_clicked.connect(self.handle_verb_button_click)
         self._game_view.quit_button.clicked.connect(self.handle_quit_button_click)
-        self._game_view.inventory_label_clicked.connect(self.handle_inventory_label_click)
+        self._game_view.inv_scroll_area.inventory_label_clicked.connect(self.handle_inventory_label_click)
         self._game_view.prop_clicked.connect(self.handle_prop_click)
         self._game_view.prop_entered.connect(self.handle_prop_enter)
         self._game_view.prop_left.connect(self.handle_prop_leave)
@@ -33,18 +33,18 @@ class GameController(QObject):
         # TODO - a lot more to fully enable scene and UI
 
     def setup_game_loop(self):
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.game_loop_tick)
+        self._timer = QTimer()
+        self._timer.timeout.connect(self.game_loop_tick)
 
         # Define the tick rate in milliseconds
-        self.tick_rate = 100  # Adjust as needed
+        self._tick_rate = 100  # Adjust as needed
 
     def start_game_loop(self):
-        self.timer.start(self.tick_rate)
+        self._timer.start(self._tick_rate)
 
     def game_loop_tick(self):
         # Update game based on the elapsed time
-        self._game_model.update_model(self.tick_rate / 1000.0)  # Convert to seconds
+        self._game_model.update_model(self._tick_rate / 1000.0)  # Convert to seconds
 
         # Update UI based on game state changes
         self._game_view.update_view()
