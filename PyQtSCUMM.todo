@@ -1,12 +1,18 @@
 =Game Engine Initialization:
 + Basics: Set up the game window, scene, and graphics view using PyQt.
-- Basics: You'll also need to manage game states, characters, items, and interactions.
++ Basics: You'll also need to manage game states, characters, items, and interactions.
 =Game State Management:
-- Basics: Create classes to represent different game states (e.g., intro, gameplay, dialogues, etc.).
-- Basics: Manage transitions between states as the player progresses through the game.
-=Character and Object Representation:
-+ Basics: Create classes for characters, objects, and hotspots.
+- Basics: Create classes to represent different game states handeling.  Beyond Bools and enums?
+- Basics: Manage transitions between states as the player progresses through the game. Room change?
+=Game Objects (Views and PODOs):
++ Basics: Create classes for props and hotspots.
 + Basics: These classes should store information about their positions, interactions, and images.
+- Basics: Create classes for characters (extends this to all PODOs)
+- Basics: Walkable areas
+- Intermediate: Regions
+= Animation System (Deferred):
+- Intermediate: Create basic animation system for props. Start and stop animating.
+- Intermediate: Extend basics for character animation. Start and stop animating.
 =Verb Interface:
 + Basics.Implement the nine-verb interface using buttons or a menu.
 + Basics: Each verb corresponds to an action the player can take, such as "Look," "Use," "Open," "Close," etc.
@@ -16,12 +22,16 @@
 =Event Handling and Interactions:
 + Basics: Implement event handling for mouse clicks on the scene.
 + Basics: When the player clicks on a hotspot or object, display relevant information or trigger interactions based on the selected verb and inventory item.
+=Display Box:
+- Display info closed by mouse click (name Narrator)
 =Dialogue System:
-- Basics: Implement a dialogue system for character interactions.
+- Basics: Implement a dialogue system for character interactions.  Advance by mouseclick.
 - Basics: Store dialogues as data and display them based on the player's choices and progress.
+- Intermediate: Investigate a good Python plugin for the handling. Twine???
 =Game Loop:
 + Basics: Implement a game loop that continuously updates the graphics and handles player input.
-=Save/Load System:
-- Basics: Create a system to save and load the game's progress, including the current game state, inventory items, and any flags indicating the state of the game.
+=Menu System:
+- Intermediate: Save & Load Create a system to save and load the game's progress, including the current game state, inventory items, and any flags indicating the state of the game.
+- Advanced: Options
 =Graphics and Assets:
-- Basics: Design or acquire graphics assets for characters, objects, backgrounds, and UI elements.
+- Advanced: Design or acquire graphics assets for characters, objects, backgrounds, and UI elements.
